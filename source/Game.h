@@ -10,5 +10,5 @@ class Game : public eng::Application
         void Destroy() override;
 
     private:
-        eng::Scene m_scene;
+        eng::Scene* m_scene = nullptr;
 };
