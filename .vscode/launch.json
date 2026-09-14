@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
     {
-        "name": "Debug BasicEngineArch",
+        "name": "Debug BasicGameEngineArch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build/BasicEngineArch",
+        "program": "${workspaceFolder}/build/BasicGameEngineArch",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
