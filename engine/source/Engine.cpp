@@ -90,6 +90,8 @@ namespace eng
             return false;
         }
 
+        m_graphicsAPI.Init();
+
         return m_application->Init();
     }
 
