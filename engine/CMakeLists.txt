@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CSS_STANDARD_REQUIRED True)
+
 project(Engine)
 
 set(PROJECT_SOURCE_FILES
@@ -25,6 +28,20 @@ set(PROJECT_SOURCE_FILES
     source/scene/Scene.cpp
 )
 
+# Group files according to files organization
+foreach(FILE ${PROJECT_SOURCE_FILES}) 
+    # Get the directory of the source file
+    get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)
+
+    # Remove common directory prefix to make the group
+    string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
+
+    # Make sure we are using windows slashes
+    string(REPLACE "/" "\\" GROUP "${GROUP}")
+
+    source_group("${GROUP}" FILES "${FILE}")
+endforeach()
+
 include_directories(source)
 add_library(${PROJECT_NAME} ${PROJECT_SOURCE_FILES})
 
@@ -39,8 +56,13 @@ include_directories(thirdparty/glew/include)
 set_property(TARGET glew_s PROPERTY FOLDER GLEW)
 set_property(TARGET glew PROPERTY FOLDER GLEW)
 
+# Add GLM library (Open Mathematics)
+add_subdirectory(thirdparty/glm-1.0.1/glm)
+include_directories(thirdparty/glm-1.0.1)
+
 # Link all thirdparty libraries
 target_link_libraries(${PROJECT_NAME}
     glfw
     glew_s
+    glm
 )

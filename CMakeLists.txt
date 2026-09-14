@@ -15,12 +15,14 @@ set(PROJECT_SOURCE_FILES
 )
 
 include_directories(engine/thirdparty/glew/include)
+include_directories(engine/thirdparty/glm-1.0.1)
 
 # Add the application
 include_directories(source)
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_FILES} "source/Game.h")
 
 # Add engine subdirectory
+add_compile_definitions(GLEW_NO_GLU)
 add_subdirectory(engine "${CMAKE_CURRENT_BINARY_DIR}/engine_build")
 include_directories(engine/source)
 
