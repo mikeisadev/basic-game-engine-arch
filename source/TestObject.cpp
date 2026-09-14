@@ -110,31 +110,4 @@ TestObject::TestObject()
 void TestObject::Update(float deltaTime)
 {
     eng::GameObject::Update(deltaTime);
-
-    #if 0
-        auto position = GetPosition();
-        auto& input = eng::Engine::GetInstance().GetInputManager();
-
-        // HORIZONTAL MOVEMENT (X)
-        if (input.IsKeyPressed(GLFW_KEY_A))
-        {
-            position.x -= 0.005f;
-        }
-        else if (input.IsKeyPressed(GLFW_KEY_D))
-        {
-            position.x += 0.005f;
-        }
-        
-        // VERTICAL MOVEMENT (Y)
-        if (input.IsKeyPressed(GLFW_KEY_W))
-        {
-            position.y += 0.005f;
-        }
-        else if (input.IsKeyPressed(GLFW_KEY_S))
-        {
-            position.y -= 0.005f;
-        }
-
-        SetPosition(position);
-    #endif
 }

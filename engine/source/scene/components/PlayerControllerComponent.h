@@ -13,6 +13,6 @@ namespace eng
 
         private:
             float m_sensitivity = 0.1f;
-            float m_moveSpeed = 1.0f;
+            float m_moveSpeed = 1.5f;
     };
 }
