@@ -18,15 +18,7 @@ bool Game::Init()
 
     m_scene->CreateObject<TestObject>("TestObject");
 
-    std::string vertexShaderSource = fs.LoadAssetFileText("shaders/vertex.glsl");
-    std::string fragmentShaderSource = fs.LoadAssetFileText("shaders/fragment.glsl");
-
-    auto& graphicsAPI = eng::Engine::GetInstance().GetGraphicsAPI();
-    auto shaderProgram = graphicsAPI.CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
-
-    auto material = std::make_shared<eng::Material>();
-    material->SetShaderProgram(shaderProgram);
-    material->SetParam("brickTexture", texture); // Comment this line if you want to disable texture rendering
+    auto material = eng::Material::Load("materials/brick.mat");
 
     std::vector<float> vertices =
     {

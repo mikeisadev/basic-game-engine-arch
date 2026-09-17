@@ -79,7 +79,11 @@ set_property(TARGET glew PROPERTY FOLDER GLEW)
 add_subdirectory(thirdparty/glm-1.0.1/glm)
 include_directories(thirdparty/glm-1.0.1)
 
+## Add STB Image library
 include_directories(thirdparty/stb_image)
+
+## Add JSON library
+include_directories(thirdparty/json)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
 
