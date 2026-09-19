@@ -123,6 +123,7 @@ namespace eng
 
             // Collect current active camera matrices
             CameraData cameraData;
+            std::vector<LightData> lights;
 
             // Get window size
             int width = 0;
@@ -143,10 +144,12 @@ namespace eng
                         cameraData.projectionMatrix = cameraComponent->GetProjectionMatrix(aspect);
                     }
                 }
+
+                lights = m_currentScene->CollectLights();
             }
 
             // Rendering calls
-            m_renderQueue.Draw(m_graphicsAPI, cameraData);
+            m_renderQueue.Draw(m_graphicsAPI, cameraData, lights);
 
             // handle some rendering (only buffer swaps)
             glfwSwapBuffers(m_window);
