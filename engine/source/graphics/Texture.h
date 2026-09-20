@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 namespace eng
 {
@@ -23,5 +24,14 @@ namespace eng
 
             GLuint m_textureID = 0;
 
+    };
+
+    class TextureManager
+    {
+        public:
+            std::shared_ptr<Texture> GetOrLoadTexture(const std::string& path);
+
+        private:
+            std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     };
 }
