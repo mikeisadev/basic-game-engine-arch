@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 #include "graphics/VertexLayout.h"
+#include <glm/vec3.hpp>
 #include <memory>
 #include <string>
 
@@ -17,8 +18,7 @@ namespace eng
             void Bind();
             void Draw();
 
-            static std::shared_ptr<Mesh> CreateCube();
-            //static std::shared_ptr<Mesh> Load(const std::string& path);
+            static std::shared_ptr<Mesh> CreateBox(const glm::vec3& extents = glm::vec3(1.0f));
 
         private:
             VertexLayout m_vertexLayout;

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Bullet 3 vendored in this project still declares an old CMake minimum version.
+# Newer CMake releases require an explicit compatibility floor for legacy subprojects.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
