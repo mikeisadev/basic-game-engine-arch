@@ -45,6 +45,8 @@ namespace eng
 
         glm::vec2 currentPos(static_cast<float>(xpos), static_cast<float>(ypos));
         inputManager.SetMousePositionCurrent(currentPos);
+
+        inputManager.SetMousePositionChanged(true);
     }
 
     Engine& Engine::GetInstance() 
@@ -81,6 +83,7 @@ namespace eng
         glfwSetKeyCallback(m_window, keyCallback);
         glfwSetMouseButtonCallback(m_window, mouseButtonCallback);
         glfwSetCursorPosCallback(m_window, cursorPositionCallback);
+        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         glfwMakeContextCurrent(m_window);
 
@@ -157,7 +160,7 @@ namespace eng
             // handle some rendering (only buffer swaps)
             glfwSwapBuffers(m_window);
 
-            m_inputManager.SetMousePositionOld(m_inputManager.GetMousePositionCurrent());
+            m_inputManager.SetMousePositionChanged(false);
         }
     }
 
