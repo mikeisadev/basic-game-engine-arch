@@ -66,6 +66,11 @@ namespace eng
         glBindVertexArray(m_VAO);
     }
 
+    void Mesh::Unbind()
+    {
+        glBindVertexArray(0);
+    }
+
     void Mesh::Draw()
     {
         if (m_indexCount > 0)
@@ -189,191 +194,100 @@ namespace eng
         return result;
     }
 
-#if 0
-    std::shared_ptr<Mesh> Mesh::Load(const std::string& path)
+    std::shared_ptr<Mesh> Mesh::CreateSphere(float radius, int sectors, int stacks)
     {
-        auto contents = Engine::GetInstance().GetFileSystem().LoadAssetFileText(path);
+        const float PI = 3.14159265358979323846f;
 
-        if (contents.empty())
+        std::vector<float> vertices((stacks + 1) * (sectors + 1) * 8); // 8 floats per vertex (position, color, uv, normal)
+
+        for (int i = 0; i <= stacks; ++i)
         {
-            return nullptr;
-        }
+            float stackAngle = PI / 2.0f - static_cast<float>(i) * (PI / static_cast<float>(stacks)); // from -pi/2 to pi/2
+            float xy = radius * cosf(stackAngle); // x-y plane radius at this stack
+            float z = radius * sinf(stackAngle);  // z coordinate
 
-        auto readFloats = [](const cgltf_accessor* acc, cgltf_size i, float* out, int n)
+            for (int j = 0; j <= sectors; ++j)
             {
-                std::fill(out, out + n, 0.0f);
+                float sectorAngle = static_cast<float>(j) * (2.0f * PI / static_cast<float>(sectors));
 
-                return cgltf_accessor_read_float(acc, i, out, n) == 1;
-            };
+                float x = xy * cosf(sectorAngle);
+                float y = xy * sinf(sectorAngle);
 
-        auto readIndex = [](const cgltf_accessor* acc, cgltf_size i)
-            {
-                cgltf_uint out = 0;
-                cgltf_bool ok = cgltf_accessor_read_uint(acc, i, &out, 1);
+                size_t vertexStart = (i * (sectors + 1) + j) * 8;
 
-                return ok ? static_cast<uint32_t>(out) : 0;
-            };
+                // Position
+                vertices[vertexStart] = x;
+                vertices[vertexStart + 1] = y;
+                vertices[vertexStart + 2] = z;
 
-        cgltf_options options = {};
-        cgltf_data* data = nullptr;
+                // Normal (normalized position vector)
+                float length = sqrtf(x * x + y * y + z * z);
+                vertices[vertexStart + 3] = x / length;
+                vertices[vertexStart + 4] = y / length;
+                vertices[vertexStart + 5] = z / length;
 
-        cgltf_result res = cgltf_parse(&options, contents.data(), contents.size(), &data);
-
-        if (res != cgltf_result_success)
-        {
-            return nullptr;
-        }
-
-        auto fullPath = Engine::GetInstance().GetFileSystem().GetAssetsFolder() / path;
-
-        res = cgltf_load_buffers(&options, data, fullPath.remove_filename().string().c_str());
-
-        if (res != cgltf_result_success)
-        {
-            cgltf_free(data);
-            return nullptr;
-        }
-
-        std::shared_ptr<Mesh> result = nullptr;
-
-        for (cgltf_size mi = 0; mi < data->meshes_count; ++mi)
-        {
-            auto& mesh = data->meshes[mi];
-
-            for (cgltf_size pi = 0; pi < mesh.primitives_count; ++pi)
-            {
-                auto& primitive = mesh.primitives[pi];
-                if (primitive.type != cgltf_primitive_type_triangles)
-                {
-                    continue;
-                }
-
-                VertexLayout vertexLayout;
-                cgltf_accessor* accessors[4] = {nullptr, nullptr, nullptr};
-
-                for (cgltf_size ai = 0; ai < primitive.attributes_count; ++ai)
-                {
-                    auto& attr = primitive.attributes[ai];
-                    auto acc = attr.data;
-
-                    if (!acc)
-                    {
-                        continue;
-                    }
-
-                    VertexElement element;
-                    element.type = GL_FLOAT;
-
-                    switch (attr.type)
-                    {
-                        case cgltf_attribute_type_position:
-                            {
-                                accessors[VertexElement::PositionIndex] = acc;
-                                element.index = VertexElement::PositionIndex;
-                                element.size = 3;
-                            }
-                            break;
-                        case cgltf_attribute_type_color:
-                            {
-                                if (attr.index != 0)
-                                {
-                                    continue;
-                                }
-
-                                accessors[VertexElement::ColorIndex] = acc;
-                                element.index = VertexElement::ColorIndex;
-                                element.size = 3;
-                            }
-                            break;
-                        case cgltf_attribute_type_texcoord:
-                            {
-                                if (attr.index != 0)
-                                {
-                                    continue;
-                                }
-                                
-                                accessors[VertexElement::UVIndex] = acc;
-                                element.index = VertexElement::UVIndex;
-                                element.size = 2;
-                            }
-                            break;
-                        case cgltf_attribute_type_normal:
-                            {                
-                                accessors[VertexElement::NormalIndex] = acc;
-                                element.index = VertexElement::NormalIndex;
-                                element.size = 3;
-                            }
-                            break;
-                        default:
-                            continue;
-                    }
-
-                    if (element.size > 0)
-                    {
-                        element.offset = vertexLayout.stride;
-                        vertexLayout.stride += element.size * sizeof(float);
-                        vertexLayout.elements.push_back(element);
-                    }
-                }
-
-                if (!accessors[VertexElement::PositionIndex])
-                {
-                    continue;
-                }
-
-                auto vertexCount = accessors[VertexElement::PositionIndex]->count;
-
-                std::vector<float> vertices;
-                vertices.resize((vertexLayout.stride / sizeof(float)) * vertexCount);
-
-                for (cgltf_size vi = 0; vi < vertexCount; ++vi)
-                {
-                    for (auto& el : vertexLayout.elements)
-                    {
-                        if (!accessors[el.index])
-                        {
-                            continue;
-                        }
-
-                        auto index = (vi * vertexLayout.stride + el.offset) / sizeof(float);
-                        float* outData = &vertices[index];
-                        readFloats(accessors[el.index], vi, outData, el.size);
-                    }
-                }
-
-                if (primitive.indices)
-                {
-                    auto indexCount = primitive.indices->count;
-                    std::vector<uint32_t> indices(indexCount);
-
-                    for (cgltf_size i = 0; i < indexCount; ++i)
-                    {
-                        indices[i] = readIndex(primitive.indices, i);
-                    }
-
-                    result = std::make_shared<Mesh>(vertexLayout, vertices, indices);
-                }
-                else
-                {
-                    result = std::make_shared<Mesh>(vertexLayout, vertices);
-                }
-
-                if (result)
-                {
-                    break;
-                }
-
-            }
-
-            if (result)
-            {
-                break;
+                // UV coordinates
+                vertices[vertexStart + 6] = static_cast<float>(j) / static_cast<float>(sectors);
+                vertices[vertexStart + 7] = static_cast<float>(i) / static_cast<float>(stacks);
             }
         }
 
-        cgltf_free(data);
+        // Generate indices
+        std::vector<unsigned int> indices;
+
+        for (int i = 0; i < stacks; ++i)
+        {
+            int k1 = i * (sectors + 1);
+            int k2 = k1 + sectors + 1;
+
+            for (int j = 0; j < sectors; ++j, ++k1, ++k2)
+            {
+                if (i != 0)
+                {
+                    indices.push_back(k1);
+                    indices.push_back(k2);
+                    indices.push_back(k1 + 1);
+                }
+
+                if (i != (stacks - 1))
+                {
+                    indices.push_back(k1 + 1);
+                    indices.push_back(k2);
+                    indices.push_back(k2 + 1);
+                }
+            }
+        }
+
+        eng::VertexLayout vertexLayout;
+
+        // Position
+        vertexLayout.elements.push_back({
+            VertexElement::PositionIndex,
+            3,
+            GL_FLOAT,
+            0
+        });
+
+        // Normal
+        vertexLayout.elements.push_back({
+            VertexElement::NormalIndex,
+            3,
+            GL_FLOAT,
+            sizeof(float) * 3
+        });
+
+        // UV
+        vertexLayout.elements.push_back({
+            VertexElement::UVIndex,
+            2,
+            GL_FLOAT,
+            sizeof(float) * 6
+        });
+
+        vertexLayout.stride = sizeof(float) * 8;
+
+        auto result = std::make_shared<eng::Mesh>(vertexLayout, vertices, indices);
 
         return result;
     }
-#endif
 }

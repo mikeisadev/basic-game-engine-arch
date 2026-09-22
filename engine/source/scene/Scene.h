@@ -23,7 +23,14 @@ namespace eng
                 auto obj = new T();
                 obj->SetName(name);
                 obj->m_scene = this;
-                SetParent(obj, parent);
+                if (m_isUpdating)
+                {
+                    m_objectsToAdd.push_back({ obj, parent });
+                }
+                else
+                {
+                    SetParent(obj, parent);
+                }
                 return obj;
             }
 
@@ -42,6 +49,8 @@ namespace eng
 
         private:
             std::vector<std::unique_ptr<GameObject>> m_objects;
+            std::vector<std::pair<GameObject*, GameObject*>> m_objectsToAdd;
             GameObject* m_mainCamera = nullptr;
+            bool m_isUpdating = false;
     };
 }
