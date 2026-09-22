@@ -1,10 +1,17 @@
 #include "Game.h"
 #include "TestObject.h"
 #include "Player.h"
+
 #include <iostream>
+
+void Game::RegisterTypes()
+{
+    Player::Register();
+}
 
 bool Game::Init() 
 {
+#if 0
     auto& fs = eng::Engine::GetInstance().GetFileSystem();
     auto texture = eng::Texture::Load("brick.png");
 
@@ -66,6 +73,11 @@ bool Game::Init()
     auto boxBody = std::make_shared<eng::RigidBody>(
         eng::BodyType::Dynamic, boxCollider, 5.0f, 0.5f);
     boxObj->AddComponent(new eng::PhysicsComponent(boxBody));
+#endif
+
+    auto scene = eng::Scene::Load("scenes/scene.sc");
+    m_scene = scene;
+    eng::Engine::GetInstance().SetScene(scene.get());
 
     return true;
 }

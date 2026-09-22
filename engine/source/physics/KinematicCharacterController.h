@@ -12,7 +12,7 @@ namespace eng
     class KinematicCharacterController
     {
         public:
-            KinematicCharacterController(float radius, float height);
+            KinematicCharacterController(float radius, float height, const glm::vec3& position);
             ~KinematicCharacterController();
 
             glm::vec3 GetPosition() const;

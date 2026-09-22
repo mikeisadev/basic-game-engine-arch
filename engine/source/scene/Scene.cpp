@@ -49,6 +49,20 @@ namespace eng
         return obj;
     }
 
+    GameObject* Scene::CreateObject(const std::string& type, const std::string& name, GameObject* parent)
+    {
+        auto obj = GameObjectFactory::GetInstance().CreateGameObject(type);
+
+        if (obj)
+        {
+            obj->SetName(name);
+            obj->m_scene = this;
+            SetParent(obj, parent);
+        }
+
+        return obj;
+    }
+
     bool Scene::SetParent(GameObject* obj, GameObject* parent)
     {
         bool result = false;
@@ -233,6 +247,20 @@ namespace eng
             }
         }
 
+        if (json.contains("camera"))
+        {
+            std::string cameraObjName = json.value("camera", "");
+
+            for (const auto& child : result->m_objects)
+            {
+                if (auto object = child->FindChildByName(cameraObjName))
+                {
+                    result->SetMainCamera(object);
+                    break;
+                }
+            }
+        }
+
         return result;
     }
 
@@ -261,6 +289,22 @@ namespace eng
         if (jsonObject.contains("type"))
         {
             const std::string type = jsonObject.value("type", "");
+
+            if (type == "gltf")
+            {
+                std::string path = jsonObject.value("path", "");
+                gameObject = GameObject::LoadGLTF(path, this);
+
+                if (gameObject)
+                {
+                    gameObject->SetParent(parent);
+                    gameObject->SetName(name);
+                }
+            }
+            else
+            {
+                gameObject = CreateObject(type, name, parent);
+            }
         }
         else
         {
@@ -304,6 +348,9 @@ namespace eng
             gameObject->SetScale(scale);
         }
 
+        gameObject->LoadProperties(jsonObject);
+
+        // Read components
         if (jsonObject.contains("components") && jsonObject["components"].is_array())
         {
             const auto& components = jsonObject["components"];
@@ -320,5 +367,18 @@ namespace eng
                 }
             }
         }
+
+        // Check for children
+        if (jsonObject.contains("children") && jsonObject["children"].is_array())
+        {
+            const auto& children = jsonObject["children"];
+
+            for (const auto& child : children)
+            {
+                LoadObject(child, gameObject);
+            }
+        }
+
+        gameObject->Init();
     }   
 }
