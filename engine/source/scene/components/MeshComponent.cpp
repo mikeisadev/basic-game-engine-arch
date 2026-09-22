@@ -17,13 +17,63 @@ namespace eng
     {
         if (json.contains("material"))
         {
-            const std::string matPath = json.value("material", "");
-            auto material = Material::Load(matPath);
-
-            if (material)
+            auto& matObj = json["material"];
+            const std::string path = matObj.value("path", "");
+            auto mat = Material::Load(path);
+            if (mat && matObj.contains("params"))
             {
-                SetMaterial(material);
+                auto& paramsObj = matObj["params"];
+
+                // Floats
+                if (paramsObj.contains("float"))
+                {
+                    for (auto& p : paramsObj["float"])
+                    {
+                        std::string name = p.value("name", "");
+                        float value = p.value("value", 0.0f);
+                        mat->SetParam(name, value);
+                    }
+                }
+
+                // Float2
+                if (paramsObj.contains("float2"))
+                {
+                    for (auto& p : paramsObj["float2"])
+                    {
+                        std::string name = p.value("name", "");
+                        float v0 = p.value("value0", 0.0f);
+                        float v1 = p.value("value1", 0.0f);
+                        mat->SetParam(name, v0, v1);
+                    }
+                }
+
+                // Float3
+                if (paramsObj.contains("float3"))
+                {
+                    for (auto& p : paramsObj["float3"])
+                    {
+                        std::string name = p.value("name", "");
+                        float v0 = p.value("value0", 0.0f);
+                        float v1 = p.value("value1", 0.0f);
+                        float v2 = p.value("value2", 0.0f);
+                        mat->SetParam(name, glm::vec3(v0, v1, v2));
+                    }
+                }
+
+                // Textures
+                if (paramsObj.contains("textures"))
+                {
+                    for (auto& p : paramsObj["textures"])
+                    {
+                        std::string name = p.value("name", "");
+                        std::string texPath = p.value("path", "");
+                        auto texture = Texture::Load(texPath);
+
+                        mat->SetParam(name, texture);
+                    }
+                }
             }
+            SetMaterial(mat);
         }
 
         if (json.contains("mesh"))
