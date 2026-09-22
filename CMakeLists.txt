@@ -35,6 +35,9 @@ include_directories(engine/source)
 # Add stb image
 include_directories(engine/thirdparty/stb_image)
 
+# Add json
+include_directories(engine/thirdparty/json)
+
 # Link engine library
 target_link_libraries(${PROJECT_NAME}
     Engine
