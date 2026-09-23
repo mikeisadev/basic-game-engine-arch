@@ -100,6 +100,7 @@ namespace eng
         m_physicsManager.Init();
         m_audioManager.Init();
         m_renderQueue.Init();
+        m_fontManager.Init();
         return m_application->Init();
     }
 
@@ -227,6 +228,11 @@ namespace eng
     AudioManager& Engine::GetAudioManager()
     {
         return m_audioManager;
+    }
+
+    FontManager& Engine::GetFontManager()
+    {
+        return m_fontManager;
     }
 
     void Engine::SetScene(Scene* scene)
