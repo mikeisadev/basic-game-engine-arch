@@ -135,6 +135,11 @@ namespace eng
         return nullptr;
     }
 
+    const std::vector<std::unique_ptr<GameObject>>& GameObject::GetChildren() const
+    {
+        return m_children;
+    }
+
     // Position methods
     const glm::vec3& GameObject::GetPosition() const
     {
