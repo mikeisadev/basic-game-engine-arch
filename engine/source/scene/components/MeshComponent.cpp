@@ -78,17 +78,24 @@ namespace eng
 
         if (json.contains("mesh"))
         {
-            const auto& meshObj = json["mesh"];
+            auto& meshObj = json["mesh"];
             const std::string type = meshObj.value("type", "box");
 
             if (type == "box")
             {
-                glm::vec3 extents(
-                    meshObj.value("x", 1.0f),
-                    meshObj.value("y", 1.0f),
-                    meshObj.value("z", 1.0f)
-                );
+                glm::vec3 extents;
+
+                extents.x = meshObj.value("x", 1.0f);
+                extents.y = meshObj.value("y", 1.0f);
+                extents.z = meshObj.value("z", 1.0f);
+                
                 auto mesh = Mesh::CreateBox(extents);
+                SetMesh(mesh);
+            } 
+            else if (type == "sphere")
+            {
+                float r = meshObj.value("r", 1.0f);
+                auto mesh = Mesh::CreateSphere(r, 16, 16);
                 SetMesh(mesh);
             }
         }
