@@ -29,8 +29,11 @@ namespace eng
             void SetTexture(const std::string& name, Texture* texture);
 
         private:
+            int GetTextureUnit(const std::string& name);
+
             std::unordered_map<std::string, GLint> m_uniformLocationCache;
+            std::unordered_map<std::string, int> m_textureUnitCache;
             GLuint m_shaderProgramID = 0;
-            int m_currentTextureUnit = 0;
+            int m_nextTextureUnit = 0;
     };
 }

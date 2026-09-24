@@ -66,16 +66,34 @@ namespace eng
     glm::vec2 RectTransformComponent::GetScreenPosition()
     {
         auto parent = GetOwner()->GetParent();
+        RectTransformComponent* parentRect = parent ? parent->GetComponent<RectTransformComponent>() : nullptr;
 
-        if (!parent || !parent->GetComponent<RectTransformComponent>())
+        if (!parentRect)
         {
             return GetOwner()->GetWorldPosition2D();
         }
 
-        auto rect = parent->GetComponent<RectTransformComponent>();
-        glm::vec2 parentAnchorPos = rect->GetScreenPosition() + 
-            (rect->GetAnchor() - rect->GetPivot()) * rect->GetSize();
+        const glm::vec2 anchorPoint = parentRect->GetRectMin() + m_anchor * parentRect->GetSize();
 
-        return GetOwner()->GetPosition2D() + parentAnchorPos;
+        return anchorPoint + GetOwner()->GetPosition2D();
+    }
+
+    glm::vec2 RectTransformComponent::GetRectMin()
+    {
+        return GetScreenPosition() - m_pivot * m_size;
+    }
+
+    glm::vec2 RectTransformComponent::GetRectMax()
+    {
+        return GetRectMin() + m_size;
+    }
+
+    bool RectTransformComponent::Contains(const glm::vec2& point)
+    {
+        const glm::vec2 min = GetRectMin();
+        const glm::vec2 max = min + m_size;
+
+        return point.x >= min.x && point.x <= max.x &&
+           point.y >= min.y && point.y <= max.y;
     }
 }

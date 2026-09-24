@@ -1,5 +1,6 @@
 #include "graphics/Texture.h"
 #include "Engine.h"
+#include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -69,6 +70,7 @@ namespace eng
 
         if (!std::filesystem::exists(fullPath))
         {
+            std::cerr << "[Image] File non trovato: " << fullPath.string() << std::endl;
             return nullptr;
         }
 

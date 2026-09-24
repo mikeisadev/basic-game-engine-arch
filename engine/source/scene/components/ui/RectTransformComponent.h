@@ -24,6 +24,10 @@ namespace eng
 
             glm::vec2 GetScreenPosition();
 
+            glm::vec2 GetRectMin();
+            glm::vec2 GetRectMax();
+            bool Contains(const glm::vec2& point);
+
         private:
             glm::vec2 m_size = glm::vec2(0.0f);
             glm::vec2 m_anchor = glm::vec2(0.0f);

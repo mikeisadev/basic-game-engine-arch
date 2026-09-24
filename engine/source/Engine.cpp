@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <algorithm>
 
 namespace eng
 {
@@ -25,30 +26,30 @@ namespace eng
 
     void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
     {
-        auto& inputManager = eng::Engine::GetInstance().GetInputManager();
+        auto& inputManager = Engine::GetInstance().GetInputManager();
 
         if (action == GLFW_PRESS)
         {
             inputManager.SetMouseButtonPressed(button, true);
-            inputManager.SetMouseButtonWasPressed(button, true);
         }
         else if (action == GLFW_RELEASE)
         {
             inputManager.SetMouseButtonPressed(button, false);
-            inputManager.SetMouseButtonWasReleased(button, true);
         }
     }
 
     void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
     {
-        auto& inputManager = eng::Engine::GetInstance().GetInputManager();
-     
-        inputManager.SetMousePositionOld(inputManager.GetMousePositionCurrent());
+        Engine::GetInstance().GetInputManager().SetMousePositionCurrent(
+        glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos)));
+    }
 
-        glm::vec2 currentPos(static_cast<float>(xpos), static_cast<float>(ypos));
-        inputManager.SetMousePositionCurrent(currentPos);
-
-        inputManager.SetMousePositionChanged(true);
+    void windowFocusCallback(GLFWwindow*, int focused)
+    {
+        if (!focused)
+        {
+            Engine::GetInstance().GetInputManager().ReleaseAll();
+        }
     }
 
     // This is triggered when the logic dimension of the window changes (points)
@@ -105,6 +106,12 @@ namespace eng
         glfwSetCursorPosCallback(m_window, cursorPositionCallback);
         glfwSetWindowSizeCallback(m_window, windowSizeCallback);
         glfwSetFramebufferSizeCallback(m_window, frameBufferSizeCallback);
+        glfwSetWindowFocusCallback(m_window, windowFocusCallback);
+
+        if (glfwRawMouseMotionSupported())
+        {
+            glfwSetInputMode(m_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        }
 
         glfwMakeContextCurrent(m_window);
 
@@ -139,9 +146,11 @@ namespace eng
             return;
         }
 
+        constexpr float maxDeltaTime = 0.1f;
+
         m_lastTimePoint = std::chrono::high_resolution_clock::now();
 
-        while(!glfwWindowShouldClose(m_window) && !m_application->NeedsToBeClosed())
+        while (!glfwWindowShouldClose(m_window) && !m_application->NeedsToBeClosed())
         {
             // process events
             glfwPollEvents();
@@ -150,6 +159,7 @@ namespace eng
             auto now = std::chrono::high_resolution_clock::now();
             float deltaTime = std::chrono::duration<float>(now - m_lastTimePoint).count();
             m_lastTimePoint = now;
+            deltaTime = std::min(deltaTime, maxDeltaTime);
 
             m_physicsManager.Update(deltaTime);
 
@@ -201,16 +211,17 @@ namespace eng
 
             m_inputManager.ClearStates();
         }
-
-        m_application.reset(nullptr);
     }
 
     void Engine::Destroy()
     {
         if (m_application)
         {
+            m_currentScene.reset();
+
             m_application->Destroy();
             m_application.reset();
+            
             glfwTerminate();
             m_window = nullptr;
         }
@@ -219,6 +230,8 @@ namespace eng
     void Engine::SetCursorEnabled(bool enabled)
     {
         glfwSetInputMode(m_window, GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+
+        m_inputManager.ResetMouse();
     }
 
     const glm::ivec2& Engine::GetWindowSize() const

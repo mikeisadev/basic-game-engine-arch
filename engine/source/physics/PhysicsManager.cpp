@@ -4,6 +4,7 @@
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 namespace eng
 {
@@ -28,13 +29,14 @@ namespace eng
         );
 
         m_world->setGravity(btVector3(0, -9.81f, 0));
+
+        m_ghostPairCallback = std::make_unique<btGhostPairCallback>();
+        m_broadphase->getOverlappingPairCache()->setInternalGhostPairCallback(m_ghostPairCallback.get());
     }
 
     void PhysicsManager::Update(float deltaTime)
     {
-        const btScalar fixedTimeStep = 1.0f / 60.0f;
-        const int maxSubsteps = 4;
-        m_world->stepSimulation(deltaTime, maxSubsteps, fixedTimeStep);
+        m_world->stepSimulation(deltaTime, MaxSubSteps, FixedTimeStep);
 
         // Process collisions
         auto dispatcher = m_world->getDispatcher();
@@ -84,11 +86,23 @@ namespace eng
             return;
         }
 
-        if (auto rigidBody = body->GetBody())
+        auto rigidBody = body->GetBody();
+        if (!rigidBody)
         {
-            m_world->addRigidBody(rigidBody, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::AllFilter);
-            body->SetAddedToWorld(true);
+            return;
         }
+
+        int group = btBroadphaseProxy::DefaultFilter;
+
+        switch (body->GetType())
+        {
+            case BodyType::Static:    group = btBroadphaseProxy::StaticFilter;    break;
+            case BodyType::Kinematic: group = btBroadphaseProxy::KinematicFilter; break;
+            case BodyType::Dynamic:   group = btBroadphaseProxy::DefaultFilter;   break;
+        }
+
+        m_world->addRigidBody(rigidBody, group, btBroadphaseProxy::AllFilter);
+        body->SetAddedToWorld(true);
     }
 
     void PhysicsManager::RemoveRigidBody(RigidBody* body)

@@ -54,6 +54,9 @@ namespace eng
     class GraphicsAPI
     {
         public:
+            // Empty the error queue of OpenGL and print every found code
+            void CheckErrors(const char* context);
+
             bool Init();
             std::shared_ptr<ShaderProgram> CreateShaderProgram(
                 const std::string& vertexSource, 

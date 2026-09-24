@@ -59,14 +59,13 @@ namespace eng
         graphicsAPI.SetBlendMode(BlendMode::Alpha);
         const auto shaderProgram2D = graphicsAPI.GetDefault2DShaderProgram();
         shaderProgram2D->Bind();
+        shaderProgram2D->SetUniform("uProjection", cameraData.orthoMatrix);
         m_mesh2D->Bind();
 
         for (auto& command : m_commands2D)
         {
             // rendering
             shaderProgram2D->SetUniform("uModel", command.modelMatrix);
-            shaderProgram2D->SetUniform("uView", cameraData.viewMatrix);
-            shaderProgram2D->SetUniform("uProjection", cameraData.orthoMatrix);
             shaderProgram2D->SetUniform("uSize", command.size.x, command.size.y);
             shaderProgram2D->SetUniform("uPivot", command.pivot.x, command.pivot.y);
             shaderProgram2D->SetUniform("uUVMin", command.lowerLeftUV.x, command.lowerLeftUV.y);
@@ -79,7 +78,10 @@ namespace eng
         m_mesh2D->Unbind();
         graphicsAPI.SetBlendMode(BlendMode::Disabled);
         graphicsAPI.SetDepthTestEnabled(true);
+
         m_commands2D.clear();
+
+        graphicsAPI.CheckErrors("RenderQueue::Draw");
 
         // UI
         graphicsAPI.SetDepthTestEnabled(false);

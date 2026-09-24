@@ -55,30 +55,14 @@ namespace eng
             return;
         }
 
-        auto ownerPos = rt->GetScreenPosition();
-        ownerPos -= rt->GetSize() * rt->GetPivot();
-
-        canvas->DrawRect(
-            ownerPos,
-            ownerPos + rt->GetSize(),
-            *m_currentColor
-        );
+        canvas->DrawRect(rt->GetRectMin(), rt->GetRectMax(), *m_currentColor);
     }
 
     bool ButtonComponent::HitTest(const glm::vec2& pos) 
     {
         auto rt = GetOwner()->GetComponent<RectTransformComponent>();
 
-        if (!rt)
-        {
-            return false;
-        }
-
-        auto ownerPos = rt->GetScreenPosition();
-        auto p1 = ownerPos - rt->GetSize() * rt->GetPivot();
-        auto p2 = p1 + rt->GetSize();
-
-        return (p1.x <= pos.x && p2.x >= pos.x && p1.y <= pos.y && p2.y >= pos.y);
+        return rt && rt->Contains(pos);
     }
 
     void ButtonComponent::OnPointerEnter() 

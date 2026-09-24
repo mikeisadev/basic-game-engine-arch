@@ -4,47 +4,54 @@
 
 namespace eng
 {
-    class InputManager 
+    class InputManager
     {
         private:
             InputManager() = default;
-            InputManager(const InputManager&) = delete; 
-            InputManager(InputManager&&) = delete; 
+            InputManager(const InputManager&) = delete;
+            InputManager(InputManager&&) = delete;
             InputManager& operator=(const InputManager&) = delete;
             InputManager& operator=(InputManager&&) = delete;
 
         public:
-            void SetKeyPressed(int key, bool pressed);
-            bool IsKeyPressed(int key);
+            // GLFW_KEY_LAST vale 348, GLFW_MOUSE_BUTTON_LAST vale 7.
+            static constexpr int MaxKeys = 512;
+            static constexpr int MaxMouseButtons = 16;
 
-            void SetMouseButtonPressed(int button, bool pressed);
-            bool IsMouseButtonPressed(int button);
+            // --- Tastiera ---
+            bool IsKeyPressed(int key) const;     // vero finché il tasto è tenuto
+            bool WasKeyPressed(int key) const;    // vero solo nel frame della pressione
+            bool WasKeyReleased(int key) const;   // vero solo nel frame del rilascio
 
-            void SetMouseButtonWasPressed(int button, bool pressed);
+            // --- Mouse ---
+            bool IsMouseButtonPressed(int button) const;
             bool WasMouseButtonPressed(int button) const;
-
-            void SetMouseButtonWasReleased(int button, bool pressed);
             bool WasMouseButtonReleased(int button) const;
 
-            void SetMousePositionOld(const glm::vec2& pos);
-            const glm::vec2& GetMousePositionOld() const;
-
-            void SetMousePositionCurrent(const glm::vec2& pos);
             const glm::vec2& GetMousePositionCurrent() const;
+            const glm::vec2& GetMouseDelta() const;   // spostamento accumulato nel frame
+            bool IsMousePositionChanged() const;      // delta diverso da zero
 
-            void SetMousePositionChanged(bool changed);
-            bool IsMousePositionChanged() const;
-
-            void ClearStates();
+            // --- Chiamati dall'Engine ---
+            void SetKeyPressed(int key, bool pressed);            // keyCallback
+            void SetMouseButtonPressed(int button, bool pressed); // mouseButtonCallback
+            void SetMousePositionCurrent(const glm::vec2& pos);   // cursorPositionCallback
+            void ResetMouse();     // dopo un cambio di modalità del cursore
+            void ReleaseAll();     // quando la finestra perde il focus
+            void ClearStates();    // a fine frame
 
         private:
-            std::array<bool, 512> m_keys = { false };
-            std::array<bool, 16> m_mouseKeys = { false };
-            std::array<bool, 16> m_mouseKeyPressed = { false };
-            std::array<bool, 16> m_mouseKeyReleased = { false };
-            glm::vec2 m_mousePositionOld = glm::vec2(0.0f);
+            std::array<bool, MaxKeys> m_keys = {};
+            std::array<bool, MaxKeys> m_keysJustPressed = {};
+            std::array<bool, MaxKeys> m_keysJustReleased = {};
+
+            std::array<bool, MaxMouseButtons> m_mouseKeys = {};
+            std::array<bool, MaxMouseButtons> m_mouseKeysJustPressed = {};
+            std::array<bool, MaxMouseButtons> m_mouseKeysJustReleased = {};
+
             glm::vec2 m_mousePositionCurrent = glm::vec2(0.0f);
-            bool m_mousePositionChanged = false;
+            glm::vec2 m_mouseDelta = glm::vec2(0.0f);
+            bool m_firstMouseEvent = true;
 
             friend class Engine;
     };

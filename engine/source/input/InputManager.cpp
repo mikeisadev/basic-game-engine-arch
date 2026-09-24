@@ -2,102 +2,100 @@
 
 namespace eng
 {
-    // Manage key presses on the keyboard
-    void InputManager::SetKeyPressed(int key, bool pressed) 
+    namespace
     {
-        if (key < 0 || key >= static_cast<int>(m_keys.size()))
+        bool InRange(int index, int size)
+        {
+            return index >= 0 && index < size;
+        }
+    }
+
+    // ---------------- Tastiera ----------------
+
+    void InputManager::SetKeyPressed(int key, bool pressed)
+    {
+        if (!InRange(key, MaxKeys))
         {
             return;
+        }
+
+        // I flag "just" si accendono solo sul cambio di stato: GLFW_REPEAT non li tocca.
+        if (pressed && !m_keys[key])
+        {
+            m_keysJustPressed[key] = true;
+        }
+        else if (!pressed && m_keys[key])
+        {
+            m_keysJustReleased[key] = true;
         }
 
         m_keys[key] = pressed;
     }
 
-    bool InputManager::IsKeyPressed(int key) 
+    bool InputManager::IsKeyPressed(int key) const
     {
-        if (key < 0 || key >= static_cast<int>(m_keys.size()))
-        {
-            return false;
-        }
-
-        return m_keys[key];
+        return InRange(key, MaxKeys) && m_keys[key];
     }
 
-    // Manage mouse button presses
+    bool InputManager::WasKeyPressed(int key) const
+    {
+        return InRange(key, MaxKeys) && m_keysJustPressed[key];
+    }
+
+    bool InputManager::WasKeyReleased(int key) const
+    {
+        return InRange(key, MaxKeys) && m_keysJustReleased[key];
+    }
+
+    // ---------------- Mouse ----------------
+
     void InputManager::SetMouseButtonPressed(int button, bool pressed)
     {
-        if (button < 0 || button >= static_cast<int>(m_mouseKeys.size()))
+        if (!InRange(button, MaxMouseButtons))
         {
             return;
+        }
+
+        if (pressed && !m_mouseKeys[button])
+        {
+            m_mouseKeysJustPressed[button] = true;
+        }
+        else if (!pressed && m_mouseKeys[button])
+        {
+            m_mouseKeysJustReleased[button] = true;
         }
 
         m_mouseKeys[button] = pressed;
     }
 
-    bool InputManager::IsMouseButtonPressed(int button)
+    bool InputManager::IsMouseButtonPressed(int button) const
     {
-        if (button < 0 || button >= static_cast<int>(m_mouseKeys.size()))
-        {
-            return false;
-        }
-
-        return m_mouseKeys[button];
-    }
-
-    void InputManager::SetMouseButtonWasPressed(int button, bool pressed)
-    {
-        if (button < 0 || button >= static_cast<int>(m_mouseKeyPressed.size()))
-        {
-            return;
-        }
-
-        m_mouseKeyPressed[button] = pressed;
+        return InRange(button, MaxMouseButtons) && m_mouseKeys[button];
     }
 
     bool InputManager::WasMouseButtonPressed(int button) const
     {
-        if (button < 0 || button >= static_cast<int>(m_mouseKeyPressed.size()))
-        {
-            return false;
-        }
-
-        return m_mouseKeyPressed[button];
+        return InRange(button, MaxMouseButtons) && m_mouseKeysJustPressed[button];
     }
 
-    void InputManager::SetMouseButtonWasReleased(int button, bool pressed)
-    {
-        if (button < 0 || button >= static_cast<int>(m_mouseKeyReleased.size()))
-        {
-            return;
-        }
-
-        m_mouseKeyReleased[button] = pressed;
-    }
-    
     bool InputManager::WasMouseButtonReleased(int button) const
-
     {
-        if (button < 0 || button >= static_cast<int>(m_mouseKeyReleased.size()))
-        {
-            return false;
-        }
-
-        return m_mouseKeyReleased[button];
-    }
-
-    // Manage mouse position
-    void InputManager::SetMousePositionOld(const glm::vec2& pos)
-    {
-        m_mousePositionOld = pos;
-    }
-
-    const glm::vec2& InputManager::GetMousePositionOld() const
-    {
-        return m_mousePositionOld;
+        return InRange(button, MaxMouseButtons) && m_mouseKeysJustReleased[button];
     }
 
     void InputManager::SetMousePositionCurrent(const glm::vec2& pos)
     {
+        // Il primo evento (o il primo dopo ResetMouse) inizializza soltanto la posizione:
+        // niente delta calcolato da (0,0) o dalla posizione del cursore nel menu.
+        if (m_firstMouseEvent)
+        {
+            m_mousePositionCurrent = pos;
+            m_firstMouseEvent = false;
+            return;
+        }
+
+        // Accumulo: più eventi nello stesso frame non si perdono.
+        m_mouseDelta += pos - m_mousePositionCurrent;
         m_mousePositionCurrent = pos;
     }
 
@@ -106,28 +104,41 @@ namespace eng
         return m_mousePositionCurrent;
     }
 
-    void InputManager::SetMousePositionChanged(bool changed)
+    const glm::vec2& InputManager::GetMouseDelta() const
     {
-        m_mousePositionChanged = changed;
+        return m_mouseDelta;
     }
 
     bool InputManager::IsMousePositionChanged() const
     {
-        return m_mousePositionChanged;
+        return m_mouseDelta.x != 0.0f || m_mouseDelta.y != 0.0f;
+    }
+
+    // ---------------- Gestione stati ----------------
+
+    void InputManager::ResetMouse()
+    {
+        m_mouseDelta = glm::vec2(0.0f);
+        m_firstMouseEvent = true;
+    }
+
+    void InputManager::ReleaseAll()
+    {
+        m_keys.fill(false);
+        m_keysJustPressed.fill(false);
+        m_keysJustReleased.fill(false);
+        m_mouseKeys.fill(false);
+        m_mouseKeysJustPressed.fill(false);
+        m_mouseKeysJustReleased.fill(false);
+        ResetMouse();
     }
 
     void InputManager::ClearStates()
     {
-        SetMousePositionChanged(false);
-
-        for (auto k : m_mouseKeyPressed)
-        {
-            SetMouseButtonWasPressed(k, false);
-        }
-
-        for (auto k : m_mouseKeyReleased)
-        {
-            SetMouseButtonWasReleased(k, false);
-        }
+        m_keysJustPressed.fill(false);
+        m_keysJustReleased.fill(false);
+        m_mouseKeysJustPressed.fill(false);
+        m_mouseKeysJustReleased.fill(false);
+        m_mouseDelta = glm::vec2(0.0f);
     }
 }

@@ -15,6 +15,8 @@
 #include "scene/components/ui/RectTransformComponent.h"
 #include "Engine.h"
 
+#include <iostream>
+
 namespace eng
 {
     void Scene::RegisterTypes()
@@ -278,17 +280,39 @@ namespace eng
 
     std::shared_ptr<Scene> Scene::Load(const std::string& path)
     {
-        const std::string contents = Engine::GetInstance().GetFileSystem().LoadAssetFileText(path);
+        auto& fileSystem = Engine::GetInstance().GetFileSystem();
+        const auto fullPath = fileSystem.GetAssetsFolder() / path;
 
-        if (contents.empty())
+        if (!std::filesystem::exists(fullPath))
         {
+            std::cerr << "[Scene] File non trovato: " << fullPath.string() << std::endl;
             return nullptr;
         }
 
-        auto json = nlohmann::json::parse(contents);
+        const std::string contents = fileSystem.LoadAssetFileText(path);
+
+        if (contents.empty())
+        {
+            std::cerr << "[Scene] File vuoto o non leggibile: " << fullPath.string() << std::endl;
+            return nullptr;
+        }
+
+        nlohmann::json json;
+
+        try
+        {
+            json = nlohmann::json::parse(contents);
+        }
+        catch (const nlohmann::json::parse_error& e)
+        {
+            std::cerr << "[Scene] JSON malformato in " << fullPath.string()
+                    << " (byte " << e.byte << "): " << e.what() << std::endl;
+            return nullptr;
+        }
 
         if (json.empty())
         {
+            std::cerr << "[Scene] JSON vuoto: " << fullPath.string() << std::endl;
             return nullptr;
         }
 
@@ -356,6 +380,20 @@ namespace eng
     void Scene::LoadObject(const nlohmann::json& jsonObject, GameObject* parent)
     {
         const std::string name = jsonObject.value("name", "Object");
+
+        {
+            const auto& siblings = parent ? parent->m_children : m_objects;
+
+            for (const auto& sibling : siblings)
+            {
+                if (sibling->GetName() == name)
+                {
+                    std::cerr << "[Scene] Warning: oggetto duplicato '" << name
+                          << "' (stesso nome di un fratello). Controlla il file scena." << std::endl;
+                    break;
+                }
+            }
+        }
 
         GameObject* gameObject = nullptr;
 

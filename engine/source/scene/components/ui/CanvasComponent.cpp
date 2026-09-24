@@ -5,6 +5,7 @@
 #include "graphics/VertexLayout.h"
 #include "render/Mesh.h"
 #include "Engine.h"
+#include <iostream>
 
 namespace eng
 {
@@ -25,8 +26,10 @@ namespace eng
         {
             const auto& windowSize = Engine::GetInstance().GetWindowSize();
 
+            GetOwner()->SetPosition2D(glm::vec2(0.0f));
+            rt->SetPivot(glm::vec2(0.0f));
             rt->SetSize(glm::vec2(
-                static_cast<float>(windowSize.x), 
+                static_cast<float>(windowSize.x),
                 static_cast<float>(windowSize.y)));
         }
         
@@ -74,6 +77,16 @@ namespace eng
         layout.stride = sizeof(float) * 8;
 
         m_mesh = std::make_shared<Mesh>(layout, m_vertices, m_indices);
+
+        if (auto rt = GetOwner()->GetComponent<RectTransformComponent>())
+        {
+            if (rt->GetSize() != glm::vec2(0.0f) || rt->GetPivot() != glm::vec2(0.0f))
+            {
+                std::cerr << "[Canvas] '" << GetOwner()->GetName()
+                        << "': size e pivot del RectTransform del canvas vengono ignorati "
+                        << "(il canvas copre sempre la finestra)" << std::endl;
+            }
+        }
     }
 
     void CanvasComponent::Render(UIElementComponent* element)

@@ -12,6 +12,7 @@ namespace eng
         glm::mat4 viewMatrix;
         glm::mat4 projectionMatrix;
         glm::mat4 orthoMatrix;
+        glm::mat4 view2D = glm::mat4(1.0f);
         glm::vec3 position;
     };
 

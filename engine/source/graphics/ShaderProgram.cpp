@@ -1,6 +1,7 @@
 #include "graphics/ShaderProgram.h"
 #include "graphics/Texture.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 namespace eng
 {
@@ -17,7 +18,6 @@ namespace eng
     void ShaderProgram::Bind()
     {
         glUseProgram(m_shaderProgramID);
-        m_currentTextureUnit = 0;
     }
 
     GLint ShaderProgram::GetUniformLocation(const std::string& name)
@@ -78,14 +78,48 @@ namespace eng
         glUniform4fv(location, 1, glm::value_ptr(value));
     }
 
+    int ShaderProgram::GetTextureUnit(const std::string& name)
+    {
+        auto it = m_textureUnitCache.find(name);
+
+        if (it != m_textureUnitCache.end())
+        {
+            return it->second;
+        }
+
+        static GLint maxUnits = 0;
+
+        if (maxUnits == 0)
+        {
+            glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxUnits);
+        }
+
+        if (m_nextTextureUnit >= maxUnits)
+        {
+            std::cerr << "[ShaderProgram] Troppi sampler nel programma " << m_shaderProgramID
+                    << ": '" << name << "' non ha una texture unit libera (max "
+                    << maxUnits << ")" << std::endl;
+            return -1;
+        }
+
+        const int unit = m_nextTextureUnit++;
+        m_textureUnitCache[name] = unit;
+  
+        glUniform1i(GetUniformLocation(name), unit);
+
+        return unit;
+    }
+
     void ShaderProgram::SetTexture(const std::string& name, Texture* texture)
     {
-        auto location = GetUniformLocation(name);
+        const int unit = GetTextureUnit(name);
 
-        glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit);
-        glBindTexture(GL_TEXTURE_2D, texture->GetID());
-        glUniform1i(location, m_currentTextureUnit);
+        if (unit < 0)
+        {
+            return;
+        }
 
-        ++m_currentTextureUnit;
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glBindTexture(GL_TEXTURE_2D, texture ? texture->GetID() : 0);
     }
 }

@@ -6,6 +6,32 @@
 
 namespace eng
 {
+    void GraphicsAPI::CheckErrors(const char* context)
+    {
+        #ifndef NDEBUG
+            GLenum error = GL_NO_ERROR;
+
+            while((error = glGetError()) != GL_NO_ERROR)
+            {
+                const char* name = "UNKNOWN";
+
+                switch (error)
+                {
+                    case GL_INVALID_ENUM:                  name = "GL_INVALID_ENUM"; break;
+                    case GL_INVALID_VALUE:                 name = "GL_INVALID_VALUE"; break;
+                    case GL_INVALID_OPERATION:             name = "GL_INVALID_OPERATION"; break;
+                    case GL_INVALID_FRAMEBUFFER_OPERATION: name = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+                    case GL_OUT_OF_MEMORY:                 name = "GL_OUT_OF_MEMORY"; break;
+                }
+
+                std::cerr << "[GL] " << name << " (0x" << std::hex << error << std::dec
+                        << ") in " << context << std::endl;
+            }
+        #else
+            (void)context;
+        #endif
+    }
+
     bool GraphicsAPI::Init()
     {
         glEnable(GL_DEPTH_TEST);
@@ -177,7 +203,6 @@ namespace eng
             out vec2 vUV;
 
             uniform mat4 uModel;
-            uniform mat4 uView;
             uniform mat4 uProjection;
 
             uniform vec2 uPivot;
@@ -191,7 +216,7 @@ namespace eng
                 vec2 local = (position - uPivot) * uSize;
                 vUV = mix(uUVMin, uUVMax, position);
 
-                gl_Position = uProjection * uView * uModel * vec4(local, 0.0, 1.0);
+                gl_Position = uProjection * uModel * vec4(local, 0.0, 1.0);
             }
             )";
 
