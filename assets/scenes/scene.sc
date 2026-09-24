@@ -1715,7 +1715,7 @@
                   "type": "TextComponent",
                   "text": "Play",
                   "font": {
-                    "path": "fonts/arial.ttf",
+                    "path": "fonts/Inter-Regular.ttf",
                     "size": 24
                   },
                   "color": {
@@ -1775,7 +1775,7 @@
                   "type": "TextComponent",
                   "text": "Quit",
                   "font": {
-                    "path": "fonts/arial.ttf",
+                    "path": "fonts/Inter-Regular.ttf",
                     "size": 24
                   },
                   "color": {

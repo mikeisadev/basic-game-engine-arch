@@ -33,10 +33,9 @@ Stay tuned and star this repo!
 | **Graphics API** | OpenGL |
 | **Window Management** | GLFW |
 | **OpenGL Loader** | GLEW |
-| **OpenGL Extension Loader** | GLAD |
 | **Math Library** | GLM |
 | **Image Loading** | stb_image |
-| **3D Model Import** | Assimp |
 | **Physics Engine** | Bullet Physics |
 | **Rendering Utilities** | GLM, stb_image, Assimp |
 | **Core Dependencies** | OpenGL + GLFW + GLEW + GLAD + GLM |
+| **Font managing** | FreeType |
