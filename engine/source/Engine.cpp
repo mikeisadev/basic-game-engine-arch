@@ -30,10 +30,12 @@ namespace eng
         if (action == GLFW_PRESS)
         {
             inputManager.SetMouseButtonPressed(button, true);
+            inputManager.SetMouseButtonWasPressed(button, true);
         }
         else if (action == GLFW_RELEASE)
         {
             inputManager.SetMouseButtonPressed(button, false);
+            inputManager.SetMouseButtonWasReleased(button, true);
         }
     }
 
@@ -133,6 +135,11 @@ namespace eng
 
             m_physicsManager.Update(deltaTime);
 
+            if (m_uiInputSystem.IsActive())
+            {
+                m_uiInputSystem.Update(deltaTime);
+            }
+
             m_application->Update(deltaTime);
 
             // Colors
@@ -177,7 +184,7 @@ namespace eng
             // handle some rendering (only buffer swaps)
             glfwSwapBuffers(m_window);
 
-            m_inputManager.SetMousePositionChanged(false);
+            m_inputManager.ClearStates();
         }
     }
 
@@ -240,6 +247,11 @@ namespace eng
     FontManager& Engine::GetFontManager()
     {
         return m_fontManager;
+    }
+
+    UIInputSystem& Engine::GetUIInputSystem()
+    {
+        return m_uiInputSystem;
     }
 
     void Engine::SetScene(Scene* scene)

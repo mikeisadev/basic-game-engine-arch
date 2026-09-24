@@ -6,4 +6,34 @@ namespace eng
     {
         
     }
+
+    bool UIElementComponent::HitTest(const glm::vec2& pos) const
+    {
+        return false;
+    }
+
+    void UIElementComponent::OnPointerEnter()
+    {
+
+    }
+
+    void UIElementComponent::OnPointerExit()
+    {
+
+    }
+
+    void UIElementComponent::OnPointerUp()
+    {
+
+    }
+
+    void UIElementComponent::OnPointerDown()
+    {
+
+    }
+
+    void UIElementComponent::OnClick()
+    {
+
+    }
 }
