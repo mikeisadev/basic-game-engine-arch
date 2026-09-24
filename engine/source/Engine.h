@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/vec2.hpp>
 #include "input/InputManager.h"
 #include "graphics/GraphicsAPI.h"
 #include "graphics/Texture.h"
@@ -34,6 +35,7 @@ namespace eng
             void Run();
             void Destroy();
             void SetCursorEnabled(bool enabled);
+            const glm::ivec2& GetWindowSize() const;
 
             void SetApplication(Application* app);
             Application* GetApplication();
@@ -47,13 +49,14 @@ namespace eng
             FontManager& GetFontManager();
             UIInputSystem& GetUIInputSystem();
 
-            void SetScene(Scene* scene);
-            Scene* GetScene();
+            void SetScene(const std::shared_ptr<Scene>& scene);
+            const std::shared_ptr<Scene>& GetScene() const;
 
         private:
             std::unique_ptr<Application> m_application;
             std::chrono::steady_clock::time_point m_lastTimePoint;
             GLFWwindow* m_window = nullptr;
+            glm::ivec2 m_windowSize = glm::ivec2(0);
             InputManager m_inputManager;
             GraphicsAPI m_graphicsAPI;
             RenderQueue m_renderQueue;
@@ -63,6 +66,8 @@ namespace eng
             AudioManager m_audioManager;
             FontManager m_fontManager;
             UIInputSystem m_uiInputSystem;
-            std::unique_ptr<Scene> m_currentScene;
+            std::shared_ptr<Scene> m_currentScene;
+
+            friend void windowSizeCallback(GLFWwindow* window, int width, int height);
     };
 }

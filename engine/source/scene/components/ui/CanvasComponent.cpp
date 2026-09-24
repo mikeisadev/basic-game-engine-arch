@@ -7,8 +7,19 @@
 
 namespace eng
 {
+    void CanvasComponent::LoadProperties(const nlohmann::json& json)
+    {
+        bool active = json.value("active", true);
+        SetActive(active);
+    }
+
     void CanvasComponent::Update(float deltaTime) 
     {
+        if (!m_active)
+        {
+            return;
+        }
+        
         BeginRendering();
 
         const auto& children = m_owner->GetChildren();
@@ -85,17 +96,18 @@ namespace eng
     void CanvasComponent::Flush()
     {
         m_mesh->UpdateDynamic(m_vertices, m_indices);
-        auto& gfx = Engine::GetInstance().GetGraphicsAPI();
-        const auto& viewport = gfx.GetViewport();
+        auto& engine = Engine::GetInstance();
+        auto& gfx = engine.GetGraphicsAPI();
+        const auto& windowSize = engine.GetWindowSize();
 
         RenderCommandUI command;
         command.mesh = m_mesh.get();
         command.shaderProgram = gfx.GetDefaultUIShaderProgram().get();
         command.batches = m_batches;
-        command.screenWidth = viewport.width;
-        command.screenHeight = viewport.height;
+        command.screenWidth = windowSize.x;
+        command.screenHeight = windowSize.y;
 
-        Engine::GetInstance().GetRenderQueue().Submit(command);
+        engine.GetRenderQueue().Submit(command);
     }
 
     void CanvasComponent::CollectUI(UIElementComponent* element, std::vector<UIElementComponent*>& out)
@@ -150,6 +162,16 @@ namespace eng
         m_indices.insert(m_indices.end(), { base, base + 1, base + 2, base, base + 2, base + 3 });
 
         UpdateBatches(nullptr);
+    }
+
+    void CanvasComponent::SetActive(bool active)
+    {
+        m_active = active;
+    }
+
+    bool CanvasComponent::IsActive() const
+    {
+        return m_active;
     }
 
     void CanvasComponent::UpdateBatches(Texture* texture)

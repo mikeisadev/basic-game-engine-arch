@@ -22,20 +22,27 @@ namespace eng
         m_activeCanvas = canvas;
     }
 
+    CanvasComponent* UIInputSystem::GetCanvas()
+    {
+        return m_activeCanvas;
+    }
+
     void UIInputSystem::Update(float deltaTime)
     {
-        if (!m_active || !m_activeCanvas)
+        if (!m_active || !m_activeCanvas || !m_activeCanvas->IsActive())
         {
             return;
         }
 
-        auto& input = Engine::GetInstance().GetInputManager();
+        auto& engine = Engine::GetInstance();
+        auto& input = engine.GetInputManager();
         bool mouseDown = input.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
         bool mousePressed = input.WasMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
         bool mouseReleased = input.WasMouseButtonReleased(GLFW_MOUSE_BUTTON_LEFT);
 
+        // GLFW: points
         auto mousePos = input.GetMousePositionCurrent();
-        mousePos.y = Engine::GetInstance().GetGraphicsAPI().GetViewport().height - mousePos.y;
+        mousePos.y = static_cast<float>(engine.GetWindowSize().y) - mousePos.y;
 
         UIElementComponent* hit = nullptr;
         auto uiElements = CollectUI(m_activeCanvas);

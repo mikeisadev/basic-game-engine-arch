@@ -51,7 +51,17 @@ namespace eng
         inputManager.SetMousePositionChanged(true);
     }
 
+    // This is triggered when the logic dimension of the window changes (points)
     void windowSizeCallback(GLFWwindow* window, int width, int height)
+    {
+        auto& engine = eng::Engine::GetInstance();
+        engine.m_windowSize = glm::ivec2(width, height);
+    }
+
+    // This is triggered when the framebuffer changes (pixels): resize, position change between
+    // monitors with different scale, resolution change.
+    // This is the only function, beyond Init, that should touch the GL viewport.
+    void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
     {
         eng::Engine::GetInstance().GetGraphicsAPI().SetViewport(0, 0, width, height);
     }
@@ -94,6 +104,7 @@ namespace eng
         glfwSetMouseButtonCallback(m_window, mouseButtonCallback);
         glfwSetCursorPosCallback(m_window, cursorPositionCallback);
         glfwSetWindowSizeCallback(m_window, windowSizeCallback);
+        glfwSetFramebufferSizeCallback(m_window, frameBufferSizeCallback);
 
         glfwMakeContextCurrent(m_window);
 
@@ -103,8 +114,16 @@ namespace eng
             return false;
         }
 
+        // Logic dimension (points): can change from width/height, if system locked the window it must be re-readed
+        glfwGetWindowSize(m_window, &m_windowSize.x, &m_windowSize.y);
+
+        // Dimension of the framebuffer (pixel). Especially on Retina screens (like the macbook) is the double of points.
+        int framebufferWidth = 0;
+        int framebufferHeight = 0;
+        glfwGetFramebufferSize(m_window, &framebufferWidth, &framebufferHeight);
+
         m_graphicsAPI.Init();
-        m_graphicsAPI.SetViewport(0, 0, width, height);
+        m_graphicsAPI.SetViewport(0, 0, framebufferWidth, framebufferHeight);
         m_physicsManager.Init();
         m_audioManager.Init();
         m_renderQueue.Init();
@@ -150,9 +169,8 @@ namespace eng
             std::vector<LightData> lights;
 
             // Get window size
-            int width = 0;
-            int height = 0;
-            glfwGetWindowSize(m_window, &width, &height);
+            const int width = m_windowSize.x;
+            const int height = m_windowSize.y;
             float aspect = static_cast<float>(width) / static_cast<float>(height);
 
             if (m_currentScene)
@@ -185,6 +203,8 @@ namespace eng
 
             m_inputManager.ClearStates();
         }
+
+        m_application.reset(nullptr);
     }
 
     void Engine::Destroy()
@@ -201,6 +221,11 @@ namespace eng
     void Engine::SetCursorEnabled(bool enabled)
     {
         glfwSetInputMode(m_window, GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+    }
+
+    const glm::ivec2& Engine::GetWindowSize() const
+    {
+        return m_windowSize;
     }
 
     void Engine::SetApplication(Application* app)
@@ -258,13 +283,13 @@ namespace eng
         return m_uiInputSystem;
     }
 
-    void Engine::SetScene(Scene* scene)
+    void Engine::SetScene(const std::shared_ptr<Scene>& scene)
     {
-        m_currentScene.reset(scene);
+        m_currentScene = scene;
     }
 
-    Scene* Engine::GetScene()
+    const std::shared_ptr<Scene>& Engine::GetScene() const
     {
-        return m_currentScene.get();
+        return m_currentScene;
     }
 }
