@@ -1,5 +1,6 @@
 #include "scene/components/ui/CanvasComponent.h"
 #include "scene/components/ui/UIElementComponent.h"
+#include "scene/components/ui/RectTransformComponent.h"
 #include "scene/GameObject.h"
 #include "graphics/VertexLayout.h"
 #include "render/Mesh.h"
@@ -18,6 +19,15 @@ namespace eng
         if (!m_active)
         {
             return;
+        }
+
+        if (auto rt = GetOwner()->GetComponent<RectTransformComponent>())
+        {
+            const auto& windowSize = Engine::GetInstance().GetWindowSize();
+
+            rt->SetSize(glm::vec2(
+                static_cast<float>(windowSize.x), 
+                static_cast<float>(windowSize.y)));
         }
         
         BeginRendering();

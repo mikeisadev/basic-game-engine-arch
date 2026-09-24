@@ -7,7 +7,7 @@ namespace eng
         
     }
 
-    bool UIElementComponent::HitTest(const glm::vec2& pos) const
+    bool UIElementComponent::HitTest(const glm::vec2& pos)
     {
         return false;
     }
